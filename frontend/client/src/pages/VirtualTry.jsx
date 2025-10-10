@@ -59,8 +59,8 @@ const VirtualTry = () => {
         formData,
         { headers: { 'Content-Type': 'multipart/form-data' } }
       );
-      const imageUrl = `http://localhost:3000${res.data.generated_image}`;
-      setImageUrl(imageUrl);
+      console.log("Generated image:", res.data);
+      setImageUrl(res.data.image);
       toast.success('Virtual try-on generated!');
     } catch (err) {
       console.error(err);
@@ -116,28 +116,42 @@ const VirtualTry = () => {
           </button>
         </form>
 
-        {/* Product Gallery */}
-        <div className="vt-products">
-          <h2>Available Products</h2>
-          <div className="product-list">
-            {products.map((product) => (
-              <div key={product._id} className="product-card">
-                {product.images?.[0] && <img src={product.images[0]} alt={product.title} className="product-thumb" />}
-                <h4>{product.title}</h4>
-                <p>{product.final_price}</p>
-              </div>
-            ))}
-          </div>
+        {/* Product Gallery + Person + Generated Image Side by Side */}
+        <div className="vt-products-container">
+  {/* Products */}
+  <div className="vt-products">
+    <h2>Available Products</h2>
+    <div className="product-list">
+      {products.map((product) => (
+        <div key={product._id} className="product-card">
+          {product.images?.[0] && <img src={product.images[0]} alt={product.title} className="product-thumb" />}
+          <h4>{product.title}</h4>
+          <p>{product.final_price}</p>
         </div>
-      </div>
+      ))}
+    </div>
+  </div>
 
-      {/* Generated Image */}
+  {/* Person + Generated Images */}
+  {(personImage || imageUrl) && (
+    <div className="vt-generated-container">
+      {personImage && (
+        <div className="vt-person">
+          <h3>Your Photo</h3>
+          <img src={URL.createObjectURL(personImage)} alt="Person" className="vt-image" />
+        </div>
+      )}
       {imageUrl && (
-        <div className="vt-result">
-          <h2>Generated Image:</h2>
+        <div className="vt-generated">
+          <h3>Generated Image</h3>
           <img src={imageUrl} alt="Generated" className="vt-image" />
         </div>
       )}
+    </div>
+  )}
+</div>
+
+      </div>
     </div>
   );
 };

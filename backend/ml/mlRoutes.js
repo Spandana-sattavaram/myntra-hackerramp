@@ -25,50 +25,46 @@ router.post('/virtual-try', upload.any(), async (req, res) => {
   try {
     const { body_type, body_weight, body_height, angle, product_id } = req.body;
 
-    // Person image
     const personFile = req.files.find(f => f.fieldname === 'person_image');
-    if (!personFile) return res.status(400).json({ error: 'Person image is required' });
-
-    // Dress images
     const dressFiles = req.files.filter(f => f.fieldname.startsWith('dress_image'));
+
+    if (!personFile) return res.status(400).json({ error: 'Person image is required' });
     if (!dressFiles.length) return res.status(400).json({ error: 'At least one dress image is required' });
 
-    // Build FormData
     const form = new FormData();
     form.append('body_type', body_type);
     form.append('body_weight', body_weight);
     form.append('body_height', body_height);
     form.append('angle', angle);
     form.append('product_id', product_id);
-
-    // Append person image
     form.append('person_image', fs.createReadStream(personFile.path));
-
-    // Append all dress images
-    dressFiles.forEach((file, i) => {
-      form.append(`outfit_image_${i}`, fs.createReadStream(file.path));
-    });
+    dressFiles.forEach((file, i) => form.append(`outfit_image_${i}`, fs.createReadStream(file.path)));
 
     // Send to Flask backend
     const flaskRes = await axios.post('http://localhost:6090/generate', form, {
       headers: form.getHeaders(),
-      responseType: 'arraybuffer', // receive image buffer
+      responseType: 'arraybuffer', // get image buffer
     });
 
-    // Save the generated image locally
-    const outputPath = path.join(UPLOAD_DIR, `generated_virtual_try.png`);
-    fs.writeFileSync(outputPath, flaskRes.data);
-    console.log("Generated image:", `/uploads/${path.basename(outputPath)}`);
+    // Convert image to base64
+    const base64Image = Buffer.from(flaskRes.data).toString('base64');
 
+    // Send JSON response with extra info
     res.json({
       message: 'Virtual try-on generated successfully',
-      generated_image: `/uploads/${path.basename(outputPath)}`,
+      body_type,
+      body_weight,
+      body_height,
+      product_id,
+      image: `data:image/png;base64,${base64Image}`, // frontend can display directly
     });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Something went wrong' });
   }
 });
+
 
 
 router.post("/", async (req, res) => {
