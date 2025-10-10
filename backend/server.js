@@ -34,6 +34,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/myntra-cl
 .then(() => console.log('MongoDB connected successfully'))
 .catch(err => console.error('MongoDB connection error:', err));
 
+app.use('/uploads', express.static(path.join(__dirname, 'ml/uploads')));
 // Routes
 app.use('/api/auth', require('./routes/auth.js'));
 app.use('/api/products', require('./routes/products.js'));

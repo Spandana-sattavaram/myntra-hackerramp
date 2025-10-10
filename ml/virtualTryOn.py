@@ -11,18 +11,19 @@ from google.genai import types
 load_dotenv()
 API_KEY = os.getenv("GEMINI_API_KEY")
 if not API_KEY:
-    raise ValueError("GEMINI_API_KEY not found in .env") # Corrected variable name in error message
+    raise ValueError("GEMINI_API_KEY not found in .env")
 
 client = genai.Client(api_key=API_KEY)
 app = Flask(__name__)
 
 # Directories
-UPLOAD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "uploads"))
+UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-OUTPUT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "outputs"))
+OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "outputs")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+# Base prompt template
 BASE_PROMPT = """
 TASK: Generate a photorealistic image of a person wearing the garment.
 
@@ -36,12 +37,14 @@ PERSON DETAILS:
 - Height: {body_height}
 
 INSTRUCTIONS:
-- Keep the person’s face exactly as in the person image.
+- Keep the person’s face exactly as in the person image and many times your putting the product image face only dont do that create an image which look like the real person with the garment on the body.
 - Composite the garment onto the body realistically according to measurements.
 - Preserve hair, skin tone, and facial features.
 - Maintain fabric texture, folds, and color from the product image.
 - Angle: {angle_instructions} (FRONT or BACK)
 - Output: clean, high-resolution PNG, studio-style, no text or watermarks.
+-A full-body, photorealistic image of a person wearing a  naturally on their body. The garment fits realistically with natural folds and shadows. The person is standing in a [indoor/outdoor] environment, with realistic lighting and proportion. The pose is natural, relaxed, and dynamic. The face and body are fully integrated and realistic, not pasted. High-resolution, professional photography style.
+-dont just put on the face in the product image like that create an image which look like the real person with the garment on the body.
 """
 
 @app.route("/generate", methods=["POST"])
@@ -57,22 +60,26 @@ def generate():
         # Validate person image
         if "person_image" not in request.files:
             return jsonify({"error": "Person image is required"}), 400
+
         person_file = request.files["person_image"]
-        person_path = os.path.join(UPLOAD_DIR, person_file.filename)
+        person_path = os.path.join(UPLOAD_DIR, "person_image.png")
         person_file.save(person_path)
 
-        # Validate outfit image(s)
+        # Validate outfit images
         outfit_files = [
             f for key, f in request.files.items() if key.startswith("outfit_image_")
         ]
         if not outfit_files:
             return jsonify({"error": "At least one outfit image is required"}), 400
 
-        outfit_file = outfit_files[0]  # For now, just take first
-        outfit_path = os.path.join(UPLOAD_DIR, outfit_file.filename)
-        outfit_file.save(outfit_path)
+        # Save outfit images as dress_image_0.png, dress_image_1.png, ...
+        outfit_paths = []
+        for idx, f in enumerate(outfit_files):
+            outfit_path = os.path.join(UPLOAD_DIR, f"dress_image_{idx}.png")
+            f.save(outfit_path)
+            outfit_paths.append(outfit_path)
 
-        # Build prompt text
+        # Build prompt
         prompt_text = BASE_PROMPT.format(
             body_type=body_type,
             body_weight=body_weight,
@@ -80,21 +87,25 @@ def generate():
             angle_instructions=f"Show a clear {angle.upper()} view."
         )
 
-        # Convert files and prompt to Gemini Parts
+        # Prepare Gemini parts
+        parts = []
+
         with open(person_path, "rb") as f:
-            # Correct: Pass data and mime_type as keyword arguments
-            person_part = types.Part.from_bytes(data=f.read(), mime_type="image/jpeg")
-        with open(outfit_path, "rb") as f:
-            # Correct: Pass data and mime_type as keyword arguments
-            outfit_part = types.Part.from_bytes(data=f.read(), mime_type="image/png")
-        
-        # CORRECTED: Pass ONLY the string variable 'prompt_text'
-        prompt_part = types.Part.from_text(prompt_text)
+            parts.append(types.Part.from_bytes(data=f.read(), mime_type="image/png"))
+
+        for outfit_path in outfit_paths:
+            with open(outfit_path, "rb") as f:
+                parts.append(types.Part.from_bytes(data=f.read(), mime_type="image/png"))
+
+        # Single argument ONLY
+        # parts.append(types.Part.from_text(prompt_text))
+        parts.append(types.Part(text=prompt_text))
+
 
         # Call Gemini API
         result = client.models.generate_content(
-            model="gemini-2.5-flash-image-preview", 
-            contents=[person_part, outfit_part, prompt_part]
+            model="gemini-2.5-flash-image-preview",
+            contents=parts
         )
 
         # Extract generated image
@@ -108,7 +119,7 @@ def generate():
         if not image_bytes:
             rejection_reason = "No image returned."
             if result.candidates and result.candidates[0].finish_reason.name != "STOP":
-                 rejection_reason = f"Generation failed: {result.candidates[0].finish_reason.name}"
+                rejection_reason = f"Generation failed: {result.candidates[0].finish_reason.name}"
             return jsonify({"error": rejection_reason}), 500
 
         # Save output

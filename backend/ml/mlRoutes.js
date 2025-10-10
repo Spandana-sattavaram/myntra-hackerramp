@@ -1,4 +1,3 @@
-// routes/recommend.js
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
@@ -13,32 +12,28 @@ if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 // Multer storage to save files on disk
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, UPLOAD_DIR);
-  },
+  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
   filename: (req, file, cb) => {
-    const timestamp = Date.now();
-    const safeName = file.originalname.replace(/\s+/g, '_'); // replace spaces
-    cb(null, `${timestamp}_${safeName}`);
+    let name = file.fieldname.includes('person') ? 'person_image' : `dress_image_${file.originalname.replace(/\s+/g, '_')}`;
+    cb(null, name + path.extname(file.originalname));
   },
 });
 
 const upload = multer({ storage });
 
-// Route: handle person + outfit images
 router.post('/virtual-try', upload.any(), async (req, res) => {
   try {
     const { body_type, body_weight, body_height, angle, product_id } = req.body;
 
-    // Check person image exists
+    // Person image
     const personFile = req.files.find(f => f.fieldname === 'person_image');
     if (!personFile) return res.status(400).json({ error: 'Person image is required' });
 
-    // All other files are outfits/products (one image per dress)
-    const outfitFiles = req.files.filter(f => f.fieldname !== 'person_image');
-    if (!outfitFiles.length) return res.status(400).json({ error: 'At least one outfit image is required' });
+    // Dress images
+    const dressFiles = req.files.filter(f => f.fieldname.startsWith('dress_image'));
+    if (!dressFiles.length) return res.status(400).json({ error: 'At least one dress image is required' });
 
-    // Create FormData to send to Flask
+    // Build FormData
     const form = new FormData();
     form.append('body_type', body_type);
     form.append('body_weight', body_weight);
@@ -49,32 +44,31 @@ router.post('/virtual-try', upload.any(), async (req, res) => {
     // Append person image
     form.append('person_image', fs.createReadStream(personFile.path));
 
-    // Append outfit images with field names like outfit_image_0, outfit_image_1, ...
-    outfitFiles.forEach((file, i) => {
+    // Append all dress images
+    dressFiles.forEach((file, i) => {
       form.append(`outfit_image_${i}`, fs.createReadStream(file.path));
     });
 
     // Send to Flask backend
     const flaskRes = await axios.post('http://localhost:6090/generate', form, {
       headers: form.getHeaders(),
-      responseType: 'arraybuffer', // to handle image buffer
+      responseType: 'arraybuffer', // receive image buffer
     });
 
     // Save the generated image locally
-    const outputPath = path.join(UPLOAD_DIR, `generated_${Date.now()}.png`);
+    const outputPath = path.join(UPLOAD_DIR, `generated_virtual_try.png`);
     fs.writeFileSync(outputPath, flaskRes.data);
+    console.log("Generated image:", `/uploads/${path.basename(outputPath)}`);
 
     res.json({
-      message: 'Images stored and sent to Flask successfully',
-      generated_image: `/ml/uploads/${path.basename(outputPath)}`,
+      message: 'Virtual try-on generated successfully',
+      generated_image: `/uploads/${path.basename(outputPath)}`,
     });
   } catch (err) {
-    console.error(err.message);
+    console.error(err);
     res.status(500).json({ error: 'Something went wrong' });
   }
 });
-
-
 
 
 router.post("/", async (req, res) => {
