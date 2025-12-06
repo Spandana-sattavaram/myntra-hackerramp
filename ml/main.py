@@ -80,8 +80,10 @@ def get_gemini_fashion_weather(city: str) -> str:
 
     Weather:
     (Write about the current weather conditions and suitable fabrics to wear currently presently.)
+    give whether separete for festive and weather.
+    give 4 line sentence each
     """
-    gem_model = genai.GenerativeModel("gemini-1.5-flash")
+    gem_model = genai.GenerativeModel("gemini-pro-latest")
     response = gem_model.generate_content(prompt)
     return response.text.strip() if response and response.text else ""
 

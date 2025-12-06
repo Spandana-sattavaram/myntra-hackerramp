@@ -1,125 +1,199 @@
+/* ===========================
+   Global Layout & Container
+=========================== */
 .virtual-try.container {
   max-width: 1200px;
-  margin: auto;
-  padding: 20px;
-  font-family: Arial, sans-serif;
+  margin: 50px auto;
+  padding: 20px 30px;
+  font-family: 'Poppins', sans-serif;
+  color: #333;
 }
 
 h1 {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 40px;
+  font-size: 2.2rem;
+  color: #222;
+  font-weight: 600;
 }
 
+/* ===========================
+   Main Layout
+=========================== */
 .vt-main {
   display: flex;
-  gap: 30px;
+  gap: 40px;
   flex-wrap: wrap;
+  justify-content: space-between;
 }
 
-/* Form Styling */
+/* ===========================
+   Form Section
+=========================== */
 .vt-form {
-  flex: 1 1 300px;
-  background: #f9f9f9;
-  padding: 20px;
-  border-radius: 10px;
+  flex: 1 1 320px;
+  background: #ffffff;
+  padding: 25px 30px;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #eee;
 }
 
 .vt-field {
-  margin-bottom: 15px;
+  margin-bottom: 18px;
 }
 
 .vt-field label {
   display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
+  margin-bottom: 6px;
+  font-weight: 600;
+  font-size: 0.95rem;
 }
 
 .vt-field input,
 .vt-field select {
   width: 100%;
-  padding: 8px;
-  border-radius: 6px;
+  padding: 10px 12px;
+  border-radius: 10px;
   border: 1px solid #ccc;
+  outline: none;
+  font-size: 0.95rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.vt-field input:focus,
+.vt-field select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
 .vt-submit {
-  padding: 10px 15px;
-  background: #007bff;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #007bff, #0056b3);
   color: white;
+  font-weight: 600;
+  font-size: 1rem;
   border: none;
-  border-radius: 6px;
+  border-radius: 10px;
   cursor: pointer;
   width: 100%;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.vt-submit:hover {
+  background: linear-gradient(135deg, #006ae6, #004a9f);
+  transform: translateY(-2px);
 }
 
 .vt-submit:disabled {
-  background: #aaa;
+  background: #999;
   cursor: not-allowed;
 }
 
-/* Product Gallery */
+/* ===========================
+   Product Gallery
+=========================== */
 .vt-products {
-  flex: 2 1 500px;
+  flex: 2 1 600px;
+  background: #fafafa;
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  overflow-x: auto;
 }
-/* Product Gallery */
-.vt-products {
-  flex: 2 1 500px;
-  overflow-x: auto;        /* horizontal scroll if too many products */
-  padding-bottom: 10px;
+
+.vt-products h2 {
+  margin-bottom: 20px;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #222;
 }
 
 .product-list {
   display: flex;
   gap: 20px;
-  flex-wrap: nowrap;       /* keep in a row */
+  flex-wrap: nowrap;
+  padding-bottom: 10px;
 }
 
 .product-card {
   background: #fff;
   padding: 15px;
-  border-radius: 12px;
-  width: 200px;            /* increased width */
-  min-width: 200px;        /* ensure consistent size */
+  border-radius: 14px;
+  width: 220px;
+  min-width: 220px;
   text-align: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  transition: transform 0.3s ease;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
 }
 
 .product-card:hover {
-  transform: scale(1.05);  /* slight zoom on hover */
+  transform: translateY(-6px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
 }
 
 .product-thumb {
   width: 100%;
-  height: 200px;           /* increased height */
+  height: 230px;
   object-fit: cover;
   border-radius: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .product-card h4 {
-  font-size: 16px;
-  margin: 5px 0;
+  font-size: 1rem;
+  margin: 6px 0;
+  color: #333;
 }
 
 .product-card p {
-  font-size: 14px;
-  color: #555;
+  font-size: 0.9rem;
+  color: #777;
 }
 
+/* ===========================
+   Generated Image Section
+=========================== */
+/* ===========================
+   Inline Generated Image Layout
+=========================== */
+.vt-generated-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 30px;
+  margin-top: 40px;
+  flex-wrap: nowrap;
+}
 
-/* Generated Image */
-.vt-result {
-  margin-top: 30px;
+.vt-person,
+.vt-dress,
+.vt-generated {
+  flex: 1 1 30%;
+  background: #fff;
+  padding: 20px;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
   text-align: center;
+  min-width: 300px;
+}
+
+.vt-person h3,
+.vt-dress h3,
+.vt-generated h3 {
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
 }
 
 .vt-image {
-  max-width: 700px;          /* increase size */
-  width: 90%;                /* responsive */
-  height: auto;
+  width: 100%;
+  height: 380px;
+  object-fit: cover;
   border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
   transition: transform 0.3s ease;
 }
 
@@ -127,12 +201,46 @@ h1 {
   transform: scale(1.05);
 }
 
-/* Responsive */
+/* Responsive fallback */
+@media (max-width: 900px) {
+  .vt-generated-container {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .vt-person,
+  .vt-dress,
+  .vt-generated {
+    flex: 1 1 90%;
+    max-width: 400px;
+  }
+
+  .vt-image {
+    height: auto;
+  }
+}
+
+
+/* ===========================
+   Responsive Design
+=========================== */
 @media (max-width: 900px) {
   .vt-main {
     flex-direction: column;
   }
-  .vt-products {
+
+  .vt-products,
+  .vt-form {
     width: 100%;
+  }
+
+  .vt-generated-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .vt-person,
+  .vt-generated {
+    width: 90%;
   }
 }

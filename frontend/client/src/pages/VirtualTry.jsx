@@ -43,12 +43,12 @@ const VirtualTry = () => {
     formData.append('product_id', productId);
 
     await Promise.all(
-      products.map(async (product, pIndex) => {
+      products.map(async (product, index) => {
         const imgUrl = product.images?.[0];
         if (imgUrl) {
           const res = await fetch(imgUrl);
           const blob = await res.blob();
-          formData.append(`dress_image_${pIndex}`, blob, `dress_image_${pIndex}.jpg`);
+          formData.append(`dress_image_${index}`, blob, `dress_image_${index}.jpg`);
         }
       })
     );
@@ -59,9 +59,8 @@ const VirtualTry = () => {
         formData,
         { headers: { 'Content-Type': 'multipart/form-data' } }
       );
-      console.log("Generated image:", res.data);
       setImageUrl(res.data.image);
-      toast.success('Virtual try-on generated!');
+      toast.success('Virtual try-on generated successfully!');
     } catch (err) {
       console.error(err);
       toast.error('Error sending images to backend');
@@ -70,29 +69,56 @@ const VirtualTry = () => {
     setLoading(false);
   };
 
+  const selectedProduct = products.find(p => p._id === productId);
+
   return (
     <div className="virtual-try container">
       <h1>Virtual Try-On</h1>
 
       <div className="vt-main">
-        {/* Form Section */}
+        {/* =====================
+            Form Section
+        ===================== */}
         <form className="vt-form" onSubmit={handleSubmit}>
           <div className="vt-field">
             <label>Upload Your Photo:</label>
-            <input type="file" accept="image/*" onChange={(e) => setPersonImage(e.target.files[0])} />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setPersonImage(e.target.files[0])}
+            />
           </div>
+
           <div className="vt-field">
             <label>Body Type:</label>
-            <input type="text" value={bodyType} onChange={(e) => setBodyType(e.target.value)} placeholder="e.g., slim" />
+            <input
+              type="text"
+              value={bodyType}
+              onChange={(e) => setBodyType(e.target.value)}
+              placeholder="e.g., slim"
+            />
           </div>
+
           <div className="vt-field">
             <label>Body Weight:</label>
-            <input type="text" value={bodyWeight} onChange={(e) => setBodyWeight(e.target.value)} placeholder="e.g., 60 kg" />
+            <input
+              type="text"
+              value={bodyWeight}
+              onChange={(e) => setBodyWeight(e.target.value)}
+              placeholder="e.g., 60 kg"
+            />
           </div>
+
           <div className="vt-field">
             <label>Body Height:</label>
-            <input type="text" value={bodyHeight} onChange={(e) => setBodyHeight(e.target.value)} placeholder="e.g., 5 feet 6 inches" />
+            <input
+              type="text"
+              value={bodyHeight}
+              onChange={(e) => setBodyHeight(e.target.value)}
+              placeholder="e.g., 5 feet 6 inches"
+            />
           </div>
+
           <div className="vt-field">
             <label>Angle:</label>
             <select value={angle} onChange={(e) => setAngle(e.target.value)}>
@@ -100,6 +126,7 @@ const VirtualTry = () => {
               <option value="BACK">BACK</option>
             </select>
           </div>
+
           <div className="vt-field">
             <label>Select Product:</label>
             <select value={productId} onChange={(e) => setProductId(e.target.value)}>
@@ -111,46 +138,70 @@ const VirtualTry = () => {
               ))}
             </select>
           </div>
+
           <button className="vt-submit" type="submit" disabled={loading}>
-            {loading ? 'Generating…' : 'Send Images'}
+            {loading ? 'Generating…' : 'Generate Try-On'}
           </button>
         </form>
 
-        {/* Product Gallery + Person + Generated Image Side by Side */}
+        {/* =====================
+            Product List + Images
+        ===================== */}
         <div className="vt-products-container">
-  {/* Products */}
-  <div className="vt-products">
-    <h2>Available Products</h2>
-    <div className="product-list">
-      {products.map((product) => (
-        <div key={product._id} className="product-card">
-          {product.images?.[0] && <img src={product.images[0]} alt={product.title} className="product-thumb" />}
-          <h4>{product.title}</h4>
-          <p>{product.final_price}</p>
-        </div>
-      ))}
-    </div>
-  </div>
+          {/* Products Gallery */}
+          <div className="vt-products">
+            <h2>Available Products</h2>
+            <div className="product-list">
+              {products.map((product) => (
+                <div key={product._id} className="product-card">
+                  {product.images?.[0] && (
+                    <img
+                      src={product.images[0]}
+                      alt={product.title}
+                      className="product-thumb"
+                    />
+                  )}
+                  <h4>{product.title}</h4>
+                  <p>{product.final_price}</p>
+                </div>
+              ))}
+            </div>
+          </div>
 
-  {/* Person + Generated Images */}
-  {(personImage || imageUrl) && (
-    <div className="vt-generated-container">
-      {personImage && (
-        <div className="vt-person">
-          <h3>Your Photo</h3>
-          <img src={URL.createObjectURL(personImage)} alt="Person" className="vt-image" />
-        </div>
-      )}
-      {imageUrl && (
-        <div className="vt-generated">
-          <h3>Generated Image</h3>
-          <img src={imageUrl} alt="Generated" className="vt-image" />
-        </div>
-      )}
-    </div>
-  )}
-</div>
+          {/* Side-by-side Display */}
+          {(personImage || selectedProduct || imageUrl) && (
+            <div className="vt-generated-container">
+              {personImage && (
+                <div className="vt-person">
+                  <h3>Your Photo</h3>
+                  <img
+                    src={URL.createObjectURL(personImage)}
+                    alt="Person"
+                    className="vt-image"
+                  />
+                </div>
+              )}
 
+              {selectedProduct?.images?.[0] && (
+                <div className="vt-dress">
+                  <h3>Product Image</h3>
+                  <img
+                    src={selectedProduct.images[0]}
+                    alt="Product"
+                    className="vt-image"
+                  />
+                </div>
+              )}
+
+              {imageUrl && (
+                <div className="vt-generated">
+                  <h3>Generated Try-On</h3>
+                  <img src={imageUrl} alt="Generated" className="vt-image" />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
